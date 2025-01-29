@@ -1,0 +1,51 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          cd host && npm install
+          cd ../remote && npm install
+          cd ../server && npm install
+
+      - name: Build applications
+        run: |
+          cd host && npm run build
+          cd ../remote && npm run build
+          cd ../server && npm run build
+
+      - name: Create release artifacts
+        run: |
+          tar -czf host-dist.tar.gz -C host/dist .
+          tar -czf remote-dist.tar.gz -C remote/dist .
+          tar -czf server-dist.tar.gz -C server/dist .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            host-dist.tar.gz
+            remote-dist.tar.gz
+            server-dist.tar.gz
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
