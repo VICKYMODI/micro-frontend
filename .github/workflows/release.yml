@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # Trigger on version tags
+      - 'v*'
 
 jobs:
   build:
@@ -17,19 +17,33 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: |
-          cd host && npm install
-          cd ../remote && npm install
-          cd ../server && npm install
+      # Host app
+      - name: Install host dependencies
+        working-directory: ./host
+        run: npm ci
 
-      - name: Build applications
-        run: |
-          cd host && npm run build
-          cd ../remote && npm run build
-          cd ../server && npm run build
+      - name: Build host
+        working-directory: ./host
+        run: npm run build
+
+      # Remote app
+      - name: Install remote dependencies
+        working-directory: ./remote
+        run: npm ci
+
+      - name: Build remote
+        working-directory: ./remote
+        run: npm run build
+
+      # Server app
+      - name: Install server dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Build server
+        working-directory: ./server
+        run: npm run build
 
       - name: Create release artifacts
         run: |
